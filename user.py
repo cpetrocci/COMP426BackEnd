@@ -38,7 +38,9 @@ with connect() as db:
                CREATE TABLE Theme (
                  id INTEGER PRIMARY KEY,
                  first TEXT,
-                 second TEXT
+                 second TEXT,
+                 text_box TEXT,
+                 text_color TEXT
                )
     """)
 
@@ -57,27 +59,29 @@ with connect() as db:
     """)
 
 with connect() as db:
-    db.execute("INSERT INTO Theme (first, second) VALUES (?, ?)",
-                    ("black", "red"))
+    db.execute("INSERT INTO Theme (first, second, text_box, text_color) VALUES (?, ?, ?, ?)",
+                    ("black", "#484848", "#FF1100", "#FF1100"))
 
 with connect() as db:
-    db.execute("INSERT INTO Theme (first, second) VALUES (?, ?)",
-                    ("blue", "green"))
+    db.execute("INSERT INTO Theme (first, second, text_box, text_color) VALUES (?, ?, ?, ?)",
+                    ("#4E8FAD", "#185380", "green", "white"))
 
 @route('/', method=['HEAD', 'OPTIONS', 'GET'])
 @enable_cors
 def hello_world():
-    return 'Hello from Bottle!'
+    return 'Welcome to the Star Wars DB!'
 
 class Theme:
 
-    def __init__(self, id, first, second):
+    def __init__(self, id, first, second, text_box, text_color):
         self.id = id
         self.first = first
         self.second = second
+        self.text_box = text_box
+        self.text_color = text_color
 
     def jsonable(self):
-        return {'id': self.id, 'first': self.first, 'second': self.second}
+        return {'id': self.id, 'first': self.first, 'second': self.second, 'text_box': self.text_box, 'text_color': self.text_color}
 
     @staticmethod
     def find(id):
@@ -90,7 +94,7 @@ class Theme:
         if row is None:
             raise Exception(f'No such Theme with user: {id}')
         else:
-            return Theme(row['id'], row['first'], row['second'])
+            return Theme(row['id'], row['first'], row['second'], row['text_box'], row['text_color'])
 
     @route('/theme/<id>', method=['OPTIONS', 'GET'])
     @enable_cors
@@ -190,19 +194,19 @@ class User:
             return User(row['id'], row['username'], row['password'], row['tid'])
 
     @staticmethod
-    def getUserCount():
+    def getUserList():
         with connect() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM User")
-            count = [row['id'] for row in cursor]
-        return count
+            cursor.execute("SELECT username FROM User")
+            list = [row['username'] for row in cursor]
+        return list
 
     @route('/user', method=['OPTIONS', 'GET'])
     @enable_cors
     def getUsers():
-        users = User.getUserCount()
+        users = User.getUserList()
         response.content_type = 'application/json'
-        return json.dumps(users)
+        return {"users": users}
 
     @route('/user/<string>', method=['OPTIONS', 'GET'])
     @enable_cors
@@ -310,3 +314,4 @@ class Favorites:
 
 
 application = default_app()
+
